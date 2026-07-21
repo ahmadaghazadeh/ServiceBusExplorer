@@ -2,18 +2,14 @@
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
-const string adminConnectionString =
-	"Endpoint=sb://localhost:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;";
-
-const string dataConnectionString =
-	"Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;";
-
-var admin = new ServiceBusAdministrationClient(adminConnectionString);
-await using var client = new ServiceBusClient(dataConnectionString);
+var config = LoadConfig();
+var admin = new ServiceBusAdministrationClient(config.AdminConnectionString);
+await using var client = new ServiceBusClient(config.DataConnectionString);
 
 Console.WriteLine("ServiceBusExplorer");
 Console.WriteLine("=================");
 Console.Title = "ServiceBusExplorer";
+Console.WriteLine($"Config: {config.ConfigPath}");
 
 while (true)
 {
@@ -258,3 +254,37 @@ static bool TryReadChoice(int maxOption, out int choice)
 
 	return true;
 }
+
+static AppConfig LoadConfig()
+{
+	var candidates = new[]
+	{
+		Path.Combine(AppContext.BaseDirectory, "appsettings.json"),
+		Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json")
+	};
+
+	var path = candidates.FirstOrDefault(File.Exists)
+		?? throw new FileNotFoundException(
+			"appsettings.json not found. Place it next to the executable or in the current directory.",
+			"appsettings.json");
+
+	var json = File.ReadAllText(path);
+	var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+	var file = JsonSerializer.Deserialize<AppSettingsFile>(json, options)
+		?? throw new InvalidOperationException($"Could not parse config file: {path}");
+
+	if (string.IsNullOrWhiteSpace(file.AdminConnectionString))
+		throw new InvalidOperationException("AdminConnectionString is missing in appsettings.json.");
+	if (string.IsNullOrWhiteSpace(file.DataConnectionString))
+		throw new InvalidOperationException("DataConnectionString is missing in appsettings.json.");
+
+	return new AppConfig(file.AdminConnectionString, file.DataConnectionString, path);
+}
+
+sealed record AppSettingsFile
+{
+	public string AdminConnectionString { get; init; } = "";
+	public string DataConnectionString { get; init; } = "";
+}
+
+sealed record AppConfig(string AdminConnectionString, string DataConnectionString, string ConfigPath);

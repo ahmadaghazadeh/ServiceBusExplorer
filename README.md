@@ -62,22 +62,28 @@ If fewer than X messages are available, it receives what it can and stops.
 
 ## Configuration
 
-Connection strings live at the top of [`ServiceBusExplorer/Program.cs`](ServiceBusExplorer/Program.cs):
+Connection strings are in [`ServiceBusExplorer/appsettings.json`](ServiceBusExplorer/appsettings.json). The file is copied next to the executable on build/publish, so you can change it **without rebuilding**.
 
-| Client | Default endpoint | Purpose |
-|--------|------------------|---------|
-| Admin  | `sb://localhost:5300` | List topics/subscriptions, message counts |
-| Data   | `sb://localhost`      | Send and receive messages |
-
-Both use the emulator defaults:
-
-```
-SharedAccessKeyName=RootManageSharedAccessKey
-SharedAccessKey=SAS_KEY_VALUE
-UseDevelopmentEmulator=true
+```json
+{
+  "AdminConnectionString": "Endpoint=sb://localhost:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;",
+  "DataConnectionString": "Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;"
+}
 ```
 
-Point these at another namespace if you are not using the emulator.
+| Setting | Default endpoint | Purpose |
+|---------|------------------|---------|
+| `AdminConnectionString` | `sb://localhost:5300` | List topics/subscriptions, message counts |
+| `DataConnectionString` | `sb://localhost` | Send and receive messages |
+
+**Where to edit**
+
+- While developing: `ServiceBusExplorer/appsettings.json` (copied on the next run if newer)
+- Without rebuild: edit `appsettings.json` beside the built exe, e.g.  
+  `ServiceBusExplorer/bin/Debug/net9.0/appsettings.json`  
+  or next to a published binary
+
+On startup the app prints the config path it loaded.
 
 ## Project layout
 
@@ -85,7 +91,8 @@ Point these at another namespace if you are not using the emulator.
 ServiceBusExplorer.sln
 └── ServiceBusExplorer/
     ├── ServiceBusExplorer.csproj
-    └── Program.cs
+    ├── Program.cs
+    └── appsettings.json
 ```
 
 Depends on [`Azure.Messaging.ServiceBus`](https://www.nuget.org/packages/Azure.Messaging.ServiceBus) only.
