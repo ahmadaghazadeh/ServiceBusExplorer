@@ -7,7 +7,7 @@ Browse topics and subscriptions, inspect message counts, send JSON messages, and
 ## Requirements
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download)
-- Azure Service Bus Emulator running locally (or update the connection strings for a real namespace)
+- Azure Service Bus Emulator running locally (or point the connection strings in [`ServiceBusExplorer/appsettings.json`](ServiceBusExplorer/appsettings.json) at a real namespace)
 
 ## Quick start
 
